@@ -13,9 +13,9 @@
 
     <fragment
         android:id="@+id/nav_reflow"
-        android:name="com.cyberqhatu.attackontitan.ui.reflow.ReflowFragment"
-        android:label="@string/menu_reflow"
-        tools:layout="@layout/fragment_reflow" />
+        android:name="com.cyberqhatu.attackontitan.ui.character.CharacterFragment"
+        android:label="@string/menu_character"
+        tools:layout="@layout/fragment_character" />
 
     <fragment
         android:id="@+id/nav_slideshow"
