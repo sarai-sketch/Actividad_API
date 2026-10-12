@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("org.jetbrains.kotlin.plugin.compose") version "2.3.21"
 }
 
 android {
@@ -32,10 +33,19 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 }
 
 dependencies {
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
@@ -46,13 +56,11 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.material)
 
-    // --- AÑADE ESTAS LIBRERÍAS QUE FALTABAN PARA LA API Y EL PROYECTO ---
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("io.coil-kt:coil:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("androidx.fragment:fragment-ktx:1.8.5")
-    // -------------------------------------------------------------------
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
