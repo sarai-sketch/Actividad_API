@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.cyberqhatu.attackontitan.data.model.Titan
+import com.cyberqhatu.attackontitan.model.Titan
 
 @Composable
 fun TitanScreen(viewModel: TitanViewModel = viewModel()) {

@@ -3,7 +3,7 @@ package com.cyberqhatu.attackontitan.ui.character
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.cyberqhatu.attackontitan.data.model.Character
+import com.cyberqhatu.attackontitan.model.Character
 
 class CharacterViewModel : ViewModel() {
 

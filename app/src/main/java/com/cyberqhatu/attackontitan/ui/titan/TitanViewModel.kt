@@ -1,7 +1,7 @@
 package com.cyberqhatu.attackontitan.ui.titan
 
 import androidx.lifecycle.ViewModel
-import com.cyberqhatu.attackontitan.data.model.Titan
+import com.cyberqhatu.attackontitan.model.Titan
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

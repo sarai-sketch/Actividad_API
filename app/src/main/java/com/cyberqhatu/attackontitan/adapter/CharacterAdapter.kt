@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.cyberqhatu.attackontitan.data.model.Character
+import com.cyberqhatu.attackontitan.model.Character
 import com.cyberqhatu.attackontitan.databinding.ItemCharacterBinding
 
 class CharacterAdapter : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {

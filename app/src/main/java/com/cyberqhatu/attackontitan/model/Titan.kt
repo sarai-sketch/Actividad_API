@@ -1,4 +1,4 @@
-package com.cyberqhatu.attackontitan.data.model
+package com.cyberqhatu.attackontitan.model
 
 data class Titan(
     val id: Int,

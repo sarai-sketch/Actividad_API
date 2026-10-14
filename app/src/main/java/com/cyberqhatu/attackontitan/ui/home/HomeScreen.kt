@@ -52,9 +52,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cyberqhatu.attackontitan.data.model.Character
-import com.cyberqhatu.attackontitan.data.model.Episode
-import com.cyberqhatu.attackontitan.data.model.Titan
+import com.cyberqhatu.attackontitan.model.Character
+import com.cyberqhatu.attackontitan.model.Episode
+import com.cyberqhatu.attackontitan.model.Titan
 import com.cyberqhatu.attackontitan.ui.theme.AttackOnTitanTheme
 import com.cyberqhatu.attackontitan.ui.theme.CardSurface
 import com.cyberqhatu.attackontitan.ui.theme.DarkBackground
