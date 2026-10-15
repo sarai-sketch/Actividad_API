@@ -22,11 +22,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -41,10 +45,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,9 +58,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cyberqhatu.attackontitan.data.model.Character
-import com.cyberqhatu.attackontitan.data.model.Episode
-import com.cyberqhatu.attackontitan.data.model.Titan
+import coil.compose.AsyncImage
+import com.cyberqhatu.attackontitan.model.Character
+import com.cyberqhatu.attackontitan.model.Episode
+import com.cyberqhatu.attackontitan.model.Titan
 import com.cyberqhatu.attackontitan.ui.theme.AttackOnTitanTheme
 import com.cyberqhatu.attackontitan.ui.theme.CardSurface
 import com.cyberqhatu.attackontitan.ui.theme.DarkBackground
@@ -63,6 +70,7 @@ import com.cyberqhatu.attackontitan.ui.theme.GoldAmber
 import com.cyberqhatu.attackontitan.ui.theme.TextPrimary
 import com.cyberqhatu.attackontitan.ui.theme.TextSecondary
 import com.cyberqhatu.attackontitan.viewmodel.AotTab
+import com.cyberqhatu.attackontitan.viewmodel.MainUiState
 import com.cyberqhatu.attackontitan.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,6 +80,10 @@ fun HomeScreen(
 ) {
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+
+    val charactersState by viewModel.charactersState.collectAsStateWithLifecycle()
+    val titansState by viewModel.titansState.collectAsStateWithLifecycle()
+    val episodesState by viewModel.episodesState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -102,7 +114,7 @@ fun HomeScreen(
                                 fontFamily = FontFamily.Serif
                             )
                             Text(
-                                text = "Cuerpo de Exploración",
+                                text = "Base de Datos Oficial",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -153,30 +165,115 @@ fun HomeScreen(
             ) {
                 when (selectedTab) {
                     AotTab.CHARACTERS -> {
-                        val filtered = viewModel.sampleCharacters.filter {
-                            it.name.contains(searchQuery, ignoreCase = true) ||
-                                    it.status.contains(searchQuery, ignoreCase = true)
+                        RenderState(
+                            state = charactersState,
+                            onRetry = { viewModel.loadCharacters() }
+                        ) { list ->
+                            val filtered = list.filter {
+                                it.name.contains(searchQuery, ignoreCase = true) ||
+                                        (it.status?.contains(searchQuery, ignoreCase = true) == true)
+                            }
+                            CharactersSection(characters = filtered)
                         }
-                        CharactersSection(characters = filtered)
                     }
 
                     AotTab.TITANS -> {
-                        val filtered = viewModel.sampleTitans.filter {
-                            it.name.contains(searchQuery, ignoreCase = true) ||
-                                    (it.currentInheritor?.contains(searchQuery, ignoreCase = true) == true)
+                        RenderState(
+                            state = titansState,
+                            onRetry = { viewModel.loadTitans() }
+                        ) { list ->
+                            val filtered = list.filter {
+                                it.name.contains(searchQuery, ignoreCase = true) ||
+                                        (it.currentInheritor?.contains(searchQuery, ignoreCase = true) == true)
+                            }
+                            TitansSection(titans = filtered)
                         }
-                        TitansSection(titans = filtered)
                     }
 
                     AotTab.EPISODES -> {
-                        val filtered = viewModel.sampleEpisodes.filter {
-                            it.name.contains(searchQuery, ignoreCase = true) ||
-                                    it.episode.contains(searchQuery, ignoreCase = true)
+                        RenderState(
+                            state = episodesState,
+                            onRetry = { viewModel.loadEpisodes() }
+                        ) { list ->
+                            val filtered = list.filter {
+                                it.name.contains(searchQuery, ignoreCase = true) ||
+                                        it.episode.contains(searchQuery, ignoreCase = true)
+                            }
+                            EpisodesSection(episodes = filtered)
                         }
-                        EpisodesSection(episodes = filtered)
                     }
 
                     AotTab.ABOUT -> AboutSection()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun <T> RenderState(
+    state: MainUiState<T>,
+    onRetry: () -> Unit,
+    content: @Composable (List<T>) -> Unit
+) {
+    when (state) {
+        is MainUiState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = DarkRed)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Conectando con la API...", color = TextSecondary, fontSize = 13.sp)
+                }
+            }
+        }
+
+        is MainUiState.Success -> {
+            if (state.data.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No se encontraron resultados", color = TextSecondary)
+                }
+            } else {
+                content(state.data)
+            }
+        }
+
+        is MainUiState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Error al conectar con la API",
+                        color = DarkRed,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = state.message,
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkRed)
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Reintentar", color = Color.White)
+                    }
                 }
             }
         }
@@ -263,60 +360,78 @@ fun CharactersSection(characters: List<Character>) {
                 border = BorderStroke(1.dp, Color(0xFF333333)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = character.name,
-                            color = GoldAmber,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                Row(modifier = Modifier.padding(16.dp)) {
+                    character.img?.let { imgUrl ->
+                        AsyncImage(
+                            model = imgUrl,
+                            contentDescription = character.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(70.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.Black)
                         )
-
-                        Surface(
-                            color = if (character.status == "Vivo" || character.status == "Viva") Color(0xFF2E7D32) else DarkRed,
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                text = character.status,
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = "Ocupación: ${character.occupation}",
-                        color = TextPrimary,
-                        fontSize = 13.sp
-                    )
-
-                    Text(
-                        text = "Altura: ${character.height} • Género: ${character.gender}",
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        character.species.take(2).forEach { sp ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(sp, fontSize = 11.sp, color = TextPrimary) },
-                                colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = character.name,
+                                color = GoldAmber,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold
                             )
+
+                            character.status?.let { status ->
+                                Surface(
+                                    color = if (status.contains("Vivo", ignoreCase = true) || status.contains("Viva", ignoreCase = true)) Color(0xFF2E7D32) else DarkRed,
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Text(
+                                        text = status,
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        character.occupation?.let { occupation ->
+                            Text(
+                                text = "Ocupación: $occupation",
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+
+                        Text(
+                            text = "Altura: ${character.height ?: "Desconocida"} • Género: ${character.gender ?: "N/A"}",
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+
+                        character.species?.let { speciesList ->
+                            if (speciesList.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    speciesList.take(2).forEach { sp ->
+                                        AssistChip(
+                                            onClick = {},
+                                            label = { Text(sp, fontSize = 10.sp, color = TextPrimary) },
+                                            colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -338,51 +453,58 @@ fun TitansSection(titans: List<Titan>) {
                 border = BorderStroke(1.dp, Color(0xFF8B0000)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = titan.name,
-                        color = DarkRed,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Altura: ${titan.height} • Lealtad: ${titan.allegiance}",
-                        color = GoldAmber,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    titan.currentInheritor?.let { inheritor ->
-                        Text(
-                            text = "Heredero Actual: $inheritor",
-                            color = TextPrimary,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(top = 4.dp)
+                Row(modifier = Modifier.padding(16.dp)) {
+                    titan.img?.let { imgUrl ->
+                        AsyncImage(
+                            model = imgUrl,
+                            contentDescription = titan.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(70.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.Black)
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = titan.name,
+                            color = DarkRed,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                    Text(
-                        text = "Habilidades principales:",
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Text(
+                            text = "Altura: ${titan.height ?: "N/A"} • Lealtad: ${titan.allegiance ?: "Desconocida"}",
+                            color = GoldAmber,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        titan.abilities.take(2).forEach { ability ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(ability, fontSize = 11.sp, color = TextPrimary) },
-                                colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2B1A1A))
+                        titan.currentInheritor?.let { inheritor ->
+                            Text(
+                                text = "Heredero Actual: $inheritor",
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 2.dp)
                             )
+                        }
+
+                        titan.abilities?.let { abilities ->
+                            if (abilities.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    abilities.take(2).forEach { ability ->
+                                        AssistChip(
+                                            onClick = {},
+                                            label = { Text(ability, fontSize = 10.sp, color = TextPrimary) },
+                                            colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2B1A1A))
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -404,52 +526,61 @@ fun EpisodesSection(episodes: List<Episode>) {
                 border = BorderStroke(1.dp, Color(0xFF333333)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = episode.name,
-                            color = TextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
+                Row(modifier = Modifier.padding(16.dp)) {
+                    episode.img?.let { imgUrl ->
+                        AsyncImage(
+                            model = imgUrl,
+                            contentDescription = episode.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(70.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.Black)
                         )
-
-                        Surface(
-                            color = GoldAmber,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = episode.episode,
-                                color = Color.Black,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Personajes destacados:",
-                        color = TextSecondary,
-                        fontSize = 11.sp
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        episode.characters.take(3).forEach { charName ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(charName, fontSize = 11.sp, color = TextPrimary) },
-                                colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = episode.name,
+                                color = TextPrimary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
                             )
+
+                            Surface(
+                                color = GoldAmber,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = episode.episode,
+                                    color = Color.Black,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+
+                        episode.characters?.let { characters ->
+                            if (characters.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    characters.take(3).forEach { charName ->
+                                        AssistChip(
+                                            onClick = {},
+                                            label = { Text(charName, fontSize = 10.sp, color = TextPrimary) },
+                                            colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -513,7 +644,7 @@ fun AboutSection() {
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Explora la base de datos oficial del universo de Attack on Titan. Consulta las fichas tácticas de los personajes, los 9 Titanes Cambiantes y el registro histórico de episodios.",
+                    text = "Conectado exitosamente con la API oficial de Attack on Titan (https://api.attackontitanapi.com/). Consulta la información en tiempo real de Personajes, Titanes y Episodios.",
                     color = TextSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
@@ -526,41 +657,8 @@ fun AboutSection() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    val sampleViewModel = MainViewModel()
+    val sampleViewModel = remember { MainViewModel() }
     AttackOnTitanTheme {
         HomeScreen(viewModel = sampleViewModel)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CharactersSectionPreview() {
-    val sampleViewModel = MainViewModel()
-    AttackOnTitanTheme {
-        Surface(color = DarkBackground) {
-            CharactersSection(characters = sampleViewModel.sampleCharacters)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TitansSectionPreview() {
-    val sampleViewModel = MainViewModel()
-    AttackOnTitanTheme {
-        Surface(color = DarkBackground) {
-            TitansSection(titans = sampleViewModel.sampleTitans)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun EpisodesSectionPreview() {
-    val sampleViewModel = MainViewModel()
-    AttackOnTitanTheme {
-        Surface(color = DarkBackground) {
-            EpisodesSection(episodes = sampleViewModel.sampleEpisodes)
-        }
     }
 }
