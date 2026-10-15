@@ -1,13 +1,13 @@
 package com.cyberqhatu.attackontitan.data
 
+import com.cyberqhatu.attackontitan.data.remote.EpisodioDto
+import com.cyberqhatu.attackontitan.data.remote.PersonajeDto
+import com.cyberqhatu.attackontitan.data.remote.TitanDto
 import com.cyberqhatu.attackontitan.model.Character
 import com.cyberqhatu.attackontitan.model.Episode
 import com.cyberqhatu.attackontitan.model.Group
 import com.cyberqhatu.attackontitan.model.Relative
 import com.cyberqhatu.attackontitan.model.Titan
-import com.cyberqhatu.attackontitan.data.remote.EpisodioDto
-import com.cyberqhatu.attackontitan.data.remote.PersonajeDto
-import com.cyberqhatu.attackontitan.data.remote.TitanDto
 
 /** "https://api.attackontitanapi.com/characters/188" -> 188 */
 private fun idDeUrl(url: String): Int? = url.trimEnd('/').substringAfterLast('/').toIntOrNull()

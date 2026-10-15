@@ -1,11 +1,11 @@
 package com.cyberqhatu.attackontitan.data
 
+import com.cyberqhatu.attackontitan.data.remote.AotApiService
+import com.cyberqhatu.attackontitan.data.remote.RetrofitClient
 import com.cyberqhatu.attackontitan.model.Character
 import com.cyberqhatu.attackontitan.model.Episode
 import com.cyberqhatu.attackontitan.model.PagedResponse
 import com.cyberqhatu.attackontitan.model.Titan
-import com.cyberqhatu.attackontitan.data.remote.AotApiService
-import com.cyberqhatu.attackontitan.data.remote.RetrofitClient
 import com.cyberqhatu.attackontitan.util.Resultado
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
