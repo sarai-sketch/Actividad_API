@@ -28,7 +28,7 @@ private fun traducirGenero(genero: String?): String = when (genero) {
     else -> textoOpcional(genero)
 }
 
-/** HomeScreen pinta en verde solo "Vivo"/"Viva", por eso se traduce el estado. */
+/** HomeScreen pinta en verde solo "Vivo"/"Viva"*/
 private fun traducirEstado(estado: String?): String {
     val texto = estado.orEmpty().lowercase()
     return when {

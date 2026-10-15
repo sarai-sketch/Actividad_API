@@ -2,11 +2,6 @@ package com.cyberqhatu.attackontitan.data.remote
 
 import com.google.gson.annotations.SerializedName
 
-/*
- * DTOs: reflejan EXACTAMENTE el JSON de https://api.attackontitanapi.com
- * Todo es nullable porque la API a veces omite campos (ej: "img").
- */
-
 // GET /characters?page=1
 data class PersonajeDto(
     val id: Int,

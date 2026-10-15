@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,6 +53,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cyberqhatu.attackontitan.model.Character
 import com.cyberqhatu.attackontitan.model.Episode
 import com.cyberqhatu.attackontitan.model.Titan
@@ -263,60 +265,80 @@ fun CharactersSection(characters: List<Character>) {
                 border = BorderStroke(1.dp, Color(0xFF333333)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = character.name,
-                            color = GoldAmber,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    if (!character.img.isNullOrBlank()) {
+                        AsyncImage(
+                            model = character.img,
+                            contentDescription = character.name,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF222222)),
+                            contentScale = ContentScale.Crop
                         )
-
-                        Surface(
-                            color = if (character.status == "Vivo" || character.status == "Viva") Color(0xFF2E7D32) else DarkRed,
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                text = character.status ?: "Desconocido",
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = "Ocupación: ${character.occupation ?: "Desconocida"}",
-                        color = TextPrimary,
-                        fontSize = 13.sp
-                    )
-
-                    Text(
-                        text = "Altura: ${character.height} • Género: ${character.gender}",
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        character.species.take(2).forEach { sp ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(sp, fontSize = 11.sp, color = TextPrimary) },
-                                colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = character.name,
+                                color = GoldAmber,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
                             )
+
+                            Surface(
+                                color = if (character.status == "Vivo" || character.status == "Viva") Color(0xFF2E7D32) else DarkRed,
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Text(
+                                    text = character.status ?: "Desconocido",
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "Ocupación: ${character.occupation ?: "Desconocida"}",
+                            color = TextPrimary,
+                            fontSize = 13.sp
+                        )
+
+                        Text(
+                            text = "Altura: ${character.height} • Género: ${character.gender}",
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+
+                        if (character.species.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                character.species.take(2).forEach { sp ->
+                                    AssistChip(
+                                        onClick = {},
+                                        label = { Text(sp, fontSize = 11.sp, color = TextPrimary) },
+                                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -338,51 +360,70 @@ fun TitansSection(titans: List<Titan>) {
                 border = BorderStroke(1.dp, Color(0xFF8B0000)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = titan.name,
-                        color = DarkRed,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Altura: ${titan.height} • Lealtad: ${titan.allegiance}",
-                        color = GoldAmber,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    titan.currentInheritor?.let { inheritor ->
-                        Text(
-                            text = "Heredero Actual: $inheritor",
-                            color = TextPrimary,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(top = 4.dp)
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    if (titan.img.isNotBlank()) {
+                        AsyncImage(
+                            model = titan.img,
+                            contentDescription = titan.name,
+                            modifier = Modifier
+                                .size(85.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF222222)),
+                            contentScale = ContentScale.Crop
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = titan.name,
+                            color = DarkRed,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                    Text(
-                        text = "Habilidades principales:",
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        titan.abilities.take(2).forEach { ability ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(ability, fontSize = 11.sp, color = TextPrimary) },
-                                colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2B1A1A))
+                        Text(
+                            text = "Altura: ${titan.height} • Lealtad: ${titan.allegiance}",
+                            color = GoldAmber,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        titan.currentInheritor?.let { inheritor ->
+                            Text(
+                                text = "Heredero Actual: $inheritor",
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(top = 4.dp)
                             )
+                        }
+
+                        if (titan.abilities.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Habilidades principales:",
+                                color = TextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                titan.abilities.take(2).forEach { ability ->
+                                    AssistChip(
+                                        onClick = {},
+                                        label = { Text(ability, fontSize = 11.sp, color = TextPrimary) },
+                                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2B1A1A))
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -404,52 +445,71 @@ fun EpisodesSection(episodes: List<Episode>) {
                 border = BorderStroke(1.dp, Color(0xFF333333)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = episode.name,
-                            color = TextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    if (episode.img.isNotBlank()) {
+                        AsyncImage(
+                            model = episode.img,
+                            contentDescription = episode.name,
+                            modifier = Modifier
+                                .size(100.dp, 65.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF222222)),
+                            contentScale = ContentScale.Crop
                         )
-
-                        Surface(
-                            color = GoldAmber,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = episode.episode,
-                                color = Color.Black,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Personajes destacados:",
-                        color = TextSecondary,
-                        fontSize = 11.sp
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        episode.characters.take(3).forEach { charName ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(charName, fontSize = 11.sp, color = TextPrimary) },
-                                colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = episode.name,
+                                color = TextPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
                             )
+
+                            Surface(
+                                color = GoldAmber,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = episode.episode,
+                                    color = Color.Black,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        if (episode.characters.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Personajes destacados:",
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                episode.characters.take(3).forEach { charName ->
+                                    AssistChip(
+                                        onClick = {},
+                                        label = { Text(charName, fontSize = 11.sp, color = TextPrimary) },
+                                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                                    )
+                                }
+                            }
                         }
                     }
                 }

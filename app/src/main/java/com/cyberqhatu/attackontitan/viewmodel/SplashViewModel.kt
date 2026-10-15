@@ -15,7 +15,7 @@ class SplashViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            delay(2500) // Simula el tiempo de carga inicial de la API
+            delay(2500)
             _isLoading.value = false
         }
     }
